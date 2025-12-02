@@ -424,104 +424,56 @@
             text-align: center;
         }
         
-        .title-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .title-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
             margin-top: 30px;
         }
         
-        .title-btn {
+        .title-option {
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
-            padding: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .title-btn:hover {
-            background: rgba(255,255,255,0.1);
-            transform: translateY(-3px);
-        }
-        
-        .title-btn.active {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: var(--primary);
-        }
-        
-        .title-btn i {
-            font-size: 40px;
-            color: var(--primary);
-        }
-        
-        .title-btn-content {
-            flex: 1;
-        }
-        
-        .title-btn h3 {
-            font-size: 20px;
-            margin-bottom: 5px;
-            color: var(--text-main);
-        }
-        
-        .title-btn p {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-        
-        /* Revalidation Type Selection */
-        .revalidation-type {
-            margin-top: 30px;
-            padding: 25px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 12px;
-            display: none;
-        }
-        
-        .revalidation-type.active {
-            display: block;
-        }
-        
-        .type-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .type-btn {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 20px;
+            padding: 30px 20px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
         }
         
-        .type-btn:hover {
+        .title-option:hover {
             background: rgba(255,255,255,0.1);
+            transform: translateY(-5px);
         }
         
-        .type-btn.active {
+        .title-option.active {
             background: rgba(56, 189, 248, 0.2);
             border-color: var(--primary);
         }
         
-        .type-btn i {
-            font-size: 30px;
-            margin-bottom: 10px;
+        .title-option i {
+            font-size: 40px;
+            margin-bottom: 15px;
             color: var(--primary);
         }
         
-        .type-btn h4 {
-            font-size: 16px;
-            color: var(--text-main);
+        .sub-options {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 12px;
+        }
+        
+        .sub-options.active {
+            display: block;
+        }
+        
+        .sub-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
         }
         
         /* Webcam */
@@ -636,49 +588,66 @@
             <!-- Title Selection Dialog -->
             <div id="titleDialog" class="title-dialog">
                 <h2 class="form-title"><i class="fa-solid fa-file-lines"></i> Select Document Type</h2>
-                
-                <div class="title-buttons">
-                    <div class="title-btn" id="newCDCBtn">
+                <div class="title-options">
+                    <div class="title-option" id="newCDCOption">
                         <i class="fa-solid fa-file-circle-plus"></i>
-                        <div class="title-btn-content">
-                            <h3>NEW CDC</h3>
-                            <p>Create new CDC document</p>
-                        </div>
+                        <h3>NEW CDC</h3>
+                        <p>Create new CDC document</p>
                     </div>
-                    
-                    <div class="title-btn" id="revalidationBtn">
+                    <div class="title-option" id="revalidationOption">
                         <i class="fa-solid fa-file-pen"></i>
-                        <div class="title-btn-content">
-                            <h3>REVALIDATION</h3>
-                            <p>Update existing CDC</p>
-                        </div>
+                        <h3>REVALIDATION</h3>
+                        <p>Update existing CDC</p>
                     </div>
                 </div>
                 
-                <!-- Revalidation Type Selection -->
-                <div class="revalidation-type" id="revalidationTypeSelection">
-                    <h4 style="margin-bottom: 15px;">Select Revalidation Type</h4>
-                    <div class="type-buttons">
-                        <div class="type-btn" id="crewTypeBtn">
+                <!-- Revalidation Sub-options -->
+                <div class="sub-options" id="revalidationSubOptions">
+                    <h4>Select Revalidation Type</h4>
+                    <div class="title-options" style="grid-template-columns: 1fr 1fr; margin-top: 15px;">
+                        <div class="title-option" id="crewOption">
                             <i class="fa-solid fa-user"></i>
                             <h4>CREW</h4>
                         </div>
-                        <div class="type-btn" id="officerTypeBtn">
+                        <div class="title-option" id="officerOption">
                             <i class="fa-solid fa-user-tie"></i>
                             <h4>OFFICER</h4>
                         </div>
                     </div>
+                    
+                    <!-- CREW Documents Checkbox Group -->
+                    <div class="checkbox-group hidden-field crew-docs-only" id="crewDocs" style="display: none; margin-top: 20px;">
+                        <div class="checkbox-section-title">Crew Documents</div>
+                        <div class="checkbox-row">
+                            <div class="checkbox-item"><input type="checkbox" id="ticket4" name="crewCertificates" value="4-Ticket"> <label for="ticket4">4-Ticket</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="pscCrew" name="crewCertificates" value="PSC"> <label for="pscCrew">PSC</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="transfer" name="crewCertificates" value="TRANSFER"> <label for="transfer">TRANSFER</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="cmcCrew" name="crewCertificates" value="CMC"> <label for="cmcCrew">CMC</label></div>
+                        </div>
+                    </div>
+                    
+                    <!-- OFFICER Documents Checkbox Group -->
+                    <div class="checkbox-group hidden-field officer-docs-only" id="officerDocs" style="display: none; margin-top: 20px;">
+                        <div class="checkbox-section-title">Officer Documents</div>
+                        <div class="checkbox-row">
+                            <div class="checkbox-item"><input type="checkbox" id="aff" name="officerCertificates" value="AFF"> <label for="aff">AFF</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="pscOfficer" name="officerCertificates" value="PSC"> <label for="pscOfficer">PSC</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="mfaCmc" name="officerCertificates" value="MFA/CMC"> <label for="mfaCmc">MFA/CMC</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="gdc" name="officerCertificates" value="G.D.C"> <label for="gdc">G.D.C</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="cdcOfficer" name="officerCertificates" value="C.D.C"> <label for="cdcOfficer">C.D.C</label></div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
-                    <button id="confirmTitle" class="btn-primary">Continue to Form</button>
+                <div style="margin-top: 30px;">
+                    <button id="confirmTitle" class="btn-primary">Confirm Selection</button>
                     <button id="cancelTitle" class="btn-secondary">Cancel</button>
                 </div>
             </div>
             
             <!-- Main Form Container -->
             <div id="formContainer" class="form-container">
-                <h2 class="form-title" id="formTitle"><i class="fa-solid fa-user-pen"></i> New Profile Registration</h2>
+                <h2 class="form-title"><i class="fa-solid fa-user-pen"></i> New Profile Registration</h2>
                 <form id="profileForm">
                     <div class="form-grid">
                         <!-- Common Fields for all types -->
@@ -764,32 +733,6 @@
                             <input type="text" id="pssrName">
                         </div>
                         
-                        <!-- Revalidation Documents Section -->
-                        <div class="form-group" style="grid-column: 1 / -1;" id="revalidationDocsSection">
-                            <!-- Crew Documents -->
-                            <div class="checkbox-group hidden-field" id="crewDocs">
-                                <div class="checkbox-section-title">Crew Documents</div>
-                                <div class="checkbox-row">
-                                    <div class="checkbox-item"><input type="checkbox" id="ticket4" name="crewCertificates" value="4-Ticket"> <label for="ticket4">4-Ticket</label></div>
-                                    <div class="checkbox-item"><input type="checkbox" id="pscCrew" name="crewCertificates" value="PSC"> <label for="pscCrew">PSC</label></div>
-                                    <div class="checkbox-item"><input type="checkbox" id="transfer" name="crewCertificates" value="TRANSFER"> <label for="transfer">TRANSFER</label></div>
-                                    <div class="checkbox-item"><input type="checkbox" id="cmcCrew" name="crewCertificates" value="CMC"> <label for="cmcCrew">CMC</label></div>
-                                </div>
-                            </div>
-                            
-                            <!-- Officer Documents -->
-                            <div class="checkbox-group hidden-field" id="officerDocs">
-                                <div class="checkbox-section-title">Officer Documents</div>
-                                <div class="checkbox-row">
-                                    <div class="checkbox-item"><input type="checkbox" id="aff" name="officerCertificates" value="AFF"> <label for="aff">AFF</label></div>
-                                    <div class="checkbox-item"><input type="checkbox" id="pscOfficer" name="officerCertificates" value="PSC"> <label for="pscOfficer">PSC</label></div>
-                                    <div class="checkbox-item"><input type="checkbox" id="mfaCmc" name="officerCertificates" value="MFA/CMC"> <label for="mfaCmc">MFA/CMC</label></div>
-                                    <div class="checkbox-item"><input type="checkbox" id="gdc" name="officerCertificates" value="G.D.C"> <label for="gdc">G.D.C</label></div>
-                                    <div class="checkbox-item"><input type="checkbox" id="cdcOfficer" name="officerCertificates" value="C.D.C"> <label for="cdcOfficer">C.D.C</label></div>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Remark -->
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label for="remark">Remark</label>
@@ -846,7 +789,7 @@
                     
                     <div style="text-align: center; margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
                         <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Save Record</button>
-                        <button type="button" id="cancelFormBtn" class="btn-secondary">Cancel</button>
+                        <button type="button" id="cancelBtn" class="btn-secondary">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -910,26 +853,23 @@
         const dateTo = document.getElementById('dateTo');
         const dateSearch = document.getElementById('dateSearch');
         const cancelBtn = document.getElementById('cancelBtn');
-        const cancelFormBtn = document.getElementById('cancelFormBtn');
         const noResults = document.getElementById('noResults');
         const feesPercentage = document.getElementById('feesPercentage');
         const feesProgress = document.getElementById('feesProgress');
 
         // Title Dialog elements
         const titleDialog = document.getElementById('titleDialog');
-        const newCDCBtn = document.getElementById('newCDCBtn');
-        const revalidationBtn = document.getElementById('revalidationBtn');
-        const revalidationTypeSelection = document.getElementById('revalidationTypeSelection');
-        const crewTypeBtn = document.getElementById('crewTypeBtn');
-        const officerTypeBtn = document.getElementById('officerTypeBtn');
+        const newCDCOption = document.getElementById('newCDCOption');
+        const revalidationOption = document.getElementById('revalidationOption');
+        const revalidationSubOptions = document.getElementById('revalidationSubOptions');
+        const crewOption = document.getElementById('crewOption');
+        const officerOption = document.getElementById('officerOption');
         const confirmTitle = document.getElementById('confirmTitle');
         const cancelTitle = document.getElementById('cancelTitle');
-        const formTitle = document.getElementById('formTitle');
 
         // Documents elements
         const crewDocs = document.getElementById('crewDocs');
         const officerDocs = document.getElementById('officerDocs');
-        const revalidationDocsSection = document.getElementById('revalidationDocsSection');
 
         // Webcam elements
         const webcamPreview = document.getElementById('webcamPreview');
@@ -952,14 +892,19 @@
         searchSubmit.addEventListener('click', searchProfiles);
         dateSearch.addEventListener('click', searchByDate);
         cancelBtn.addEventListener('click', hideForm);
-        cancelFormBtn.addEventListener('click', hideForm);
         feesPercentage.addEventListener('input', updateProgressBar);
 
         // Title Dialog event listeners
-        newCDCBtn.addEventListener('click', () => selectTitle('NEW CDC'));
-        revalidationBtn.addEventListener('click', () => selectTitle('REVALIDATION'));
-        crewTypeBtn.addEventListener('click', () => selectRevalidationType('CREW'));
-        officerTypeBtn.addEventListener('click', () => selectRevalidationType('OFFICER'));
+        newCDCOption.addEventListener('click', () => selectTitle('NEW CDC'));
+        revalidationOption.addEventListener('click', () => selectTitle('REVALIDATION'));
+        crewOption.addEventListener('click', () => {
+            selectRevalidationType('CREW');
+            showRevalidationDocs('crew');
+        });
+        officerOption.addEventListener('click', () => {
+            selectRevalidationType('OFFICER');
+            showRevalidationDocs('officer');
+        });
         confirmTitle.addEventListener('click', confirmTitleSelection);
         cancelTitle.addEventListener('click', hideTitleDialog);
 
@@ -1216,42 +1161,45 @@
             titleDialog.style.display = 'none';
         }
 
-        // Function to select title
         function selectTitle(title) {
             selectedTitle = title;
             
-            // Remove active class from both buttons
-            newCDCBtn.classList.remove('active');
-            revalidationBtn.classList.remove('active');
-            
             if (title === 'NEW CDC') {
-                newCDCBtn.classList.add('active');
-                // Hide revalidation type selection
-                revalidationTypeSelection.style.display = 'none';
-                selectedRevalidationType = '';
+                newCDCOption.classList.add('active');
+                revalidationOption.classList.remove('active');
+                revalidationSubOptions.classList.remove('active');
+                // Hide revalidation docs
+                crewDocs.style.display = 'none';
+                officerDocs.style.display = 'none';
             } else if (title === 'REVALIDATION') {
-                revalidationBtn.classList.add('active');
-                // Show revalidation type selection
-                revalidationTypeSelection.style.display = 'block';
+                revalidationOption.classList.add('active');
+                newCDCOption.classList.remove('active');
+                revalidationSubOptions.classList.add('active');
             }
         }
 
-        // Function to select revalidation type
         function selectRevalidationType(type) {
             selectedRevalidationType = type;
             
-            // Remove active class from both buttons
-            crewTypeBtn.classList.remove('active');
-            officerTypeBtn.classList.remove('active');
-            
             if (type === 'CREW') {
-                crewTypeBtn.classList.add('active');
+                crewOption.classList.add('active');
+                officerOption.classList.remove('active');
             } else if (type === 'OFFICER') {
-                officerTypeBtn.classList.add('active');
+                officerOption.classList.add('active');
+                crewOption.classList.remove('active');
             }
         }
 
-        // Function to confirm title selection
+        function showRevalidationDocs(type) {
+            if (type === 'crew') {
+                crewDocs.style.display = 'block';
+                officerDocs.style.display = 'none';
+            } else if (type === 'officer') {
+                crewDocs.style.display = 'none';
+                officerDocs.style.display = 'block';
+            }
+        }
+
         function confirmTitleSelection() {
             if (!selectedTitle) {
                 alert('Please select a document type');
@@ -1259,7 +1207,7 @@
             }
             
             if (selectedTitle === 'REVALIDATION' && !selectedRevalidationType) {
-                alert('Please select a revalidation type (CREW or OFFICER)');
+                alert('Please select a revalidation type');
                 return;
             }
             
@@ -1267,20 +1215,22 @@
             showForm();
         }
 
-        // Function to reset title options
         function resetTitleOptions() {
             selectedTitle = '';
             selectedRevalidationType = '';
-            newCDCBtn.classList.remove('active');
-            revalidationBtn.classList.remove('active');
-            revalidationTypeSelection.style.display = 'none';
-            crewTypeBtn.classList.remove('active');
-            officerTypeBtn.classList.remove('active');
+            newCDCOption.classList.remove('active');
+            revalidationOption.classList.remove('active');
+            revalidationSubOptions.classList.remove('active');
+            crewOption.classList.remove('active');
+            officerOption.classList.remove('active');
+            
+            // Hide all revalidation docs
+            crewDocs.style.display = 'none';
+            officerDocs.style.display = 'none';
             
             // Uncheck all checkboxes
             document.querySelectorAll('input[name="crewCertificates"]').forEach(cb => cb.checked = false);
             document.querySelectorAll('input[name="officerCertificates"]').forEach(cb => cb.checked = false);
-            document.querySelectorAll('input[name="certificates"]').forEach(cb => cb.checked = false);
         }
 
         function showForm() {
@@ -1288,13 +1238,6 @@
             searchContainer.style.display = 'none';
             profileForm.reset();
             updateProgressBar();
-            
-            // Update form title based on selection
-            if (selectedTitle === 'NEW CDC') {
-                formTitle.innerHTML = '<i class="fa-solid fa-user-pen"></i> New CDC Registration';
-            } else if (selectedTitle === 'REVALIDATION') {
-                formTitle.innerHTML = `<i class="fa-solid fa-user-pen"></i> ${selectedRevalidationType} Revalidation Registration`;
-            }
             
             // Reset webcam
             if (stream) {
@@ -1322,9 +1265,6 @@
                     field.classList.remove('hidden-field');
                 });
                 
-                // Hide revalidation docs section
-                revalidationDocsSection.style.display = 'none';
-                
                 // Set rank options for NEW CDC
                 rankSelect.innerHTML = `
                     <option value="">Select Rank</option>
@@ -1339,18 +1279,6 @@
                 newCDCOnlyFields.forEach(field => {
                     field.classList.add('hidden-field');
                 });
-                
-                // Show revalidation docs section
-                revalidationDocsSection.style.display = 'block';
-                
-                // Show/hide the correct documents
-                if (selectedRevalidationType === 'CREW') {
-                    crewDocs.classList.remove('hidden-field');
-                    officerDocs.classList.add('hidden-field');
-                } else if (selectedRevalidationType === 'OFFICER') {
-                    crewDocs.classList.add('hidden-field');
-                    officerDocs.classList.remove('hidden-field');
-                }
                 
                 // Set rank options based on revalidation type
                 if (selectedRevalidationType === 'OFFICER') {
