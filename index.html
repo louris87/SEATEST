@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeamanAgency - Command Center</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --primary: #38bdf8; /* Sky Blue */
+            --secondary: #818cf8; /* Indigo */
+            --accent: #2dd4bf; /* Teal */
+            --danger: #f43f5e;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 4px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        /* Header Styling */
+        header {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            padding: 20px 30px;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Status & User Info */
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            background: rgba(255,255,255,0.05);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: var(--glass-border);
+        }
+        
+        .sync-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+        
+        .sync-indicator.syncing { background-color: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
+        .sync-indicator.error { background-color: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #userEmail {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Forms & Containers */
+        .search-container, .form-container, .login-container, .title-dialog {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: var(--glass-border);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Inputs */
+        input, select, textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        label {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Search */
+        .search-container { display: none; }
+        .search-box { display: flex; gap: 15px; }
+        
+        /* Form Grid */
+        .form-container { display: none; }
+        .form-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-title i { color: var(--primary); }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        
+        /* Checkboxes */
+        .checkbox-group {
+            background: rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-top: 30px;
+        }
+        
+        .checkbox-section-title {
+            color: var(--primary);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .checkbox-item label {
+            text-transform: none;
+            letter-spacing: normal;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        /* Login Specifics */
+        .login-container {
+            display: none;
+            max-width: 450px;
+            margin: 10vh auto;
+            text-align: center;
+        }
+        .login-container h2 { margin-bottom: 30px; color: var(--text-main); }
+        .login-btn { width: 100%; justify-content: center; margin-top: 20px; }
+
+        /* Profile Cards */
+        .profile-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        
+        .profile-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+        }
+
+        .profile-card:hover::before { opacity: 1; }
+        
+        .card-header {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .card-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .card-header h3 { font-size: 18px; color: var(--text-main); }
+        .card-header p { color: var(--primary); font-size: 13px; font-weight: 600; }
+        
+        .card-body { padding: 20px; }
+        
+        .card-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            font-size: 14px;
+        }
+        
+        .card-detail:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { color: var(--text-main); font-weight: 500; text-align: right;}
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 6px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.5s ease;
+        }
+        
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px dashed rgba(255,255,255,0.1);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Title Dialog */
+        .title-dialog {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .title-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .title-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .title-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+        }
+        
+        .title-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .title-btn i {
+            font-size: 40px;
+            color: var(--primary);
+        }
+        
+        .title-btn-content {
+            flex: 1;
+        }
+        
+        .title-btn h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+        
+        .title-btn p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* Revalidation Type Selection */
+        .revalidation-type {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .revalidation-type.active {
+            display: block;
+        }
+        
+        .type-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .type-btn {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .type-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .type-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .type-btn i {
+            font-size: 30px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .type-btn h4 {
+            font-size: 16px;
+            color: var(--text-main);
+        }
+        
+        /* Webcam */
+        .webcam-container {
+            grid-column: 1 / -1;
+            background: rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-top: 20px;
+        }
+        
+        .webcam-preview {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .webcam-preview video, .webcam-preview canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .webcam-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        /* Date Search */
+        .date-search {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .date-search input {
+            flex: 1;
+        }
+        
+        /* Hidden fields */
+        .hidden-field {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1><i class="fa-solid fa-anchor" style="margin-right: 10px;"></i>SEAMAN AGENCY</h1>
+                <div class="sync-status">
+                    <div class="sync-indicator" id="syncIndicator"></div>
+                    <span id="syncStatus">System Initializing...</span>
+                </div>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <span id="userEmail">user@example.com</span>
+                    <button id="logoutBtn" class="logout-btn"><i class="fa-solid fa-power-off"></i> Logout</button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loadingText">Processing data...</p>
+        </div>
+
+        <div id="loginContainer" class="login-container">
+            <h2>Welcome Back</h2>
+            <form id="loginForm" class="login-form">
+                <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="login-btn btn-primary">Access System</button>
+            </form>
+        </div>
+        
+        <div id="mainContent" style="display: none;">
+            <div class="btn-group">
+                <button id="addDataBtn" class="btn-primary"><i class="fa-solid fa-plus"></i> Add Profile</button>
+                <button id="searchBtn" class="btn-secondary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                <button id="exportBtn" class="btn-secondary" style="margin-left: auto;"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+            </div>
+            
+            <div id="searchContainer" class="search-container">
+                <h3 style="margin-bottom: 15px;">Search Database</h3>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Type name, rank, or CDC number...">
+                    <button id="searchSubmit" class="btn-primary">Search</button>
+                </div>
+                <div class="date-search">
+                    <input type="date" id="dateFrom" placeholder="From Date">
+                    <input type="date" id="dateTo" placeholder="To Date">
+                    <button id="dateSearch" class="btn-secondary">Search by Date</button>
+                </div>
+            </div>
+            
+            <!-- Title Selection Dialog -->
+            <div id="titleDialog" class="title-dialog">
+                <h2 class="form-title"><i class="fa-solid fa-file-lines"></i> Select Document Type</h2>
+                
+                <div class="title-buttons">
+                    <div class="title-btn" id="newCDCBtn">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                        <div class="title-btn-content">
+                            <h3>NEW CDC</h3>
+                            <p>Create new CDC document</p>
+                        </div>
+                    </div>
+                    
+                    <div class="title-btn" id="revalidationBtn">
+                        <i class="fa-solid fa-file-pen"></i>
+                        <div class="title-btn-content">
+                            <h3>REVALIDATION</h3>
+                            <p>Update existing CDC</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Revalidation Type Selection -->
+                <div class="revalidation-type" id="revalidationTypeSelection">
+                    <h4 style="margin-bottom: 15px;">Select Revalidation Type</h4>
+                    <div class="type-buttons">
+                        <div class="type-btn" id="crewTypeBtn">
+                            <i class="fa-solid fa-user"></i>
+                            <h4>CREW</h4>
+                        </div>
+                        <div class="type-btn" id="officerTypeBtn">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <h4>OFFICER</h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                    <button id="confirmTitle" class="btn-primary">Continue to Form</button>
+                    <button id="cancelTitle" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+            
+            <!-- Main Form Container -->
+            <div id="formContainer" class="form-container">
+                <h2 class="form-title" id="formTitle"><i class="fa-solid fa-user-pen"></i> New Profile Registration</h2>
+                <form id="profileForm">
+                    <div class="form-grid">
+                        <!-- Common Fields for all types -->
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="rank">Rank</label>
+                            <select id="rank" required>
+                                <option value="">Select Rank</option>
+                                <!-- Options will be populated based on selection -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cdcNumber">CDC Number</label>
+                            <input type="text" id="cdcNumber" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea id="address" required rows="1"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="passportNumber">Passport Number</label>
+                            <input type="text" id="passportNumber">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="passportExpiry">Passport Expiry Date</label>
+                            <input type="text" id="passportExpiry" placeholder="DD/MM/YYYY">
+                        </div>
+                        
+                        <!-- NEW CDC Only Fields -->
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="nrc">NRC Number</label>
+                            <input type="text" id="nrc" placeholder="e.g., 12/ABC(N)123456">
+                        </div>
+                        
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="fatherName">Father's Name</label>
+                            <input type="text" id="fatherName">
+                        </div>
+                        
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="motherName">Mother's Name</label>
+                            <input type="text" id="motherName">
+                        </div>
+                        
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="birthdate">Birthdate (DD/MM/YYYY)</label>
+                            <input type="text" id="birthdate" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}">
+                        </div>
+                        
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="distinguishingMark">Distinguishing Mark</label>
+                            <input type="text" id="distinguishingMark" placeholder="Visible marks">
+                        </div>
+                        
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="fees">Fees Amount ($)</label>
+                            <input type="number" id="fees">
+                        </div>
+                        
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="feesPercentage">Payment Status (%)</label>
+                            <input type="number" id="feesPercentage" min="0" max="100">
+                            <div class="progress-bar">
+                                <div class="progress" id="feesProgress"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group hidden-field new-cdc-only">
+                            <label for="pssrName">PSSR Name</label>
+                            <input type="text" id="pssrName">
+                        </div>
+                        
+                        <!-- Revalidation Documents Section -->
+                        <div class="form-group" style="grid-column: 1 / -1;" id="revalidationDocsSection">
+                            <!-- Crew Documents -->
+                            <div class="checkbox-group hidden-field" id="crewDocs">
+                                <div class="checkbox-section-title">Crew Documents</div>
+                                <div class="checkbox-row">
+                                    <div class="checkbox-item"><input type="checkbox" id="ticket4" name="crewCertificates" value="4-Ticket"> <label for="ticket4">4-Ticket</label></div>
+                                    <div class="checkbox-item"><input type="checkbox" id="pscCrew" name="crewCertificates" value="PSC"> <label for="pscCrew">PSC</label></div>
+                                    <div class="checkbox-item"><input type="checkbox" id="transfer" name="crewCertificates" value="TRANSFER"> <label for="transfer">TRANSFER</label></div>
+                                    <div class="checkbox-item"><input type="checkbox" id="cmcCrew" name="crewCertificates" value="CMC"> <label for="cmcCrew">CMC</label></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Officer Documents -->
+                            <div class="checkbox-group hidden-field" id="officerDocs">
+                                <div class="checkbox-section-title">Officer Documents</div>
+                                <div class="checkbox-row">
+                                    <div class="checkbox-item"><input type="checkbox" id="aff" name="officerCertificates" value="AFF"> <label for="aff">AFF</label></div>
+                                    <div class="checkbox-item"><input type="checkbox" id="pscOfficer" name="officerCertificates" value="PSC"> <label for="pscOfficer">PSC</label></div>
+                                    <div class="checkbox-item"><input type="checkbox" id="mfaCmc" name="officerCertificates" value="MFA/CMC"> <label for="mfaCmc">MFA/CMC</label></div>
+                                    <div class="checkbox-item"><input type="checkbox" id="gdc" name="officerCertificates" value="G.D.C"> <label for="gdc">G.D.C</label></div>
+                                    <div class="checkbox-item"><input type="checkbox" id="cdcOfficer" name="officerCertificates" value="C.D.C"> <label for="cdcOfficer">C.D.C</label></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Remark -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="remark">Remark</label>
+                            <textarea id="remark" rows="3" placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Webcam Section -->
+                    <div class="webcam-container">
+                        <div class="checkbox-section-title">Profile Photo</div>
+                        <div class="webcam-preview" id="webcamPreview">
+                            <i class="fa-solid fa-camera" style="font-size: 50px; opacity: 0.5;"></i>
+                        </div>
+                        <div class="webcam-controls">
+                            <button type="button" id="startCamera" class="btn-secondary"><i class="fa-solid fa-camera"></i> Start Camera</button>
+                            <button type="button" id="capturePhoto" class="btn-secondary" disabled><i class="fa-solid fa-camera-retro"></i> Capture</button>
+                            <button type="button" id="retakePhoto" class="btn-secondary" disabled><i class="fa-solid fa-rotate-left"></i> Retake</button>
+                        </div>
+                        <input type="hidden" id="profilePhoto">
+                    </div>
+
+                    <!-- Original Checkbox Groups - Only for NEW CDC -->
+                    <div class="checkbox-group hidden-field new-cdc-only">
+                        <div class="checkbox-section">
+                            <div class="checkbox-section-title">Core Documents</div>
+                            <div class="checkbox-row">
+                                <div class="checkbox-item"><input type="checkbox" id="bst" name="certificates" value="BST"> <label for="bst">BST</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="pd" name="certificates" value="PD"> <label for="pd">PD</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="pe" name="certificates" value="PE"> <label for="pe">PE</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="cck" name="certificates" value="CCK"> <label for="cck">CCK</label></div>
+                            </div>
+                        </div>
+
+                        <div class="checkbox-section">
+                            <div class="checkbox-section-title">Additional Docs</div>
+                            <div class="checkbox-row">
+                                <div class="checkbox-item"><input type="checkbox" id="ssa" name="certificates" value="SSA"> <label for="ssa">SSA</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="dsd" name="certificates" value="DSD"> <label for="dsd">DSD</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="cdc" name="certificates" value="CDC"> <label for="cdc">CDC</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="cmc" name="certificates" value="CMC"> <label for="cmc">CMC</label></div>
+                            </div>
+                        </div>
+
+                        <div class="checkbox-section">
+                            <div class="checkbox-section-title">Special</div>
+                            <div class="checkbox-row">
+                                <div class="checkbox-item"><input type="checkbox" id="pscSpecial" name="certificates" value="PSC"> <label for="pscSpecial">PSC</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="tff" name="certificates" value="TFF"> <label for="tff">TFF</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="aio" name="certificates" value="AIO"> <label for="aio">AIO</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="sid" name="certificates" value="SID"> <label for="sid">SID</label></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
+                        <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Save Record</button>
+                        <button type="button" id="cancelFormBtn" class="btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="profileCards" class="profile-cards">
+                <div class="no-results" id="noResults">
+                    <i class="fa-solid fa-cloud-arrow-down" style="font-size: 40px; margin-bottom: 20px; opacity: 0.5;"></i><br>
+                    Connecting to Database...
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>&copy; 2025 Seaman Agency Systems. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDP34-uI6YNf56YUax0zLQ7y_TWad52rA0",
+            authDomain: "seameandatabase.firebaseapp.com",
+            projectId: "seameandatabase",
+            storageBucket: "seameandatabase.firebasestorage.app",
+            messagingSenderId: "1078604355486",
+            appId: "G-16GVDL26Q3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        let profiles = [];
+        let selectedTitle = '';
+        let selectedRevalidationType = '';
+        let stream = null;
+        let capturedPhoto = null;
+
+        // DOM elements
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const syncIndicator = document.getElementById('syncIndicator');
+        const syncStatus = document.getElementById('syncStatus');
+        const loginContainer = document.getElementById('loginContainer');
+        const loginForm = document.getElementById('loginForm');
+        const mainContent = document.getElementById('mainContent');
+        const userInfo = document.getElementById('userInfo');
+        const userEmail = document.getElementById('userEmail');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const addDataBtn = document.getElementById('addDataBtn');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchContainer = document.getElementById('searchContainer');
+        const formContainer = document.getElementById('formContainer');
+        const profileForm = document.getElementById('profileForm');
+        const profileCards = document.getElementById('profileCards');
+        const searchInput = document.getElementById('searchInput');
+        const searchSubmit = document.getElementById('searchSubmit');
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        const dateSearch = document.getElementById('dateSearch');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const cancelFormBtn = document.getElementById('cancelFormBtn');
+        const noResults = document.getElementById('noResults');
+        const feesPercentage = document.getElementById('feesPercentage');
+        const feesProgress = document.getElementById('feesProgress');
+
+        // Title Dialog elements
+        const titleDialog = document.getElementById('titleDialog');
+        const newCDCBtn = document.getElementById('newCDCBtn');
+        const revalidationBtn = document.getElementById('revalidationBtn');
+        const revalidationTypeSelection = document.getElementById('revalidationTypeSelection');
+        const crewTypeBtn = document.getElementById('crewTypeBtn');
+        const officerTypeBtn = document.getElementById('officerTypeBtn');
+        const confirmTitle = document.getElementById('confirmTitle');
+        const cancelTitle = document.getElementById('cancelTitle');
+        const formTitle = document.getElementById('formTitle');
+
+        // Documents elements
+        const crewDocs = document.getElementById('crewDocs');
+        const officerDocs = document.getElementById('officerDocs');
+        const revalidationDocsSection = document.getElementById('revalidationDocsSection');
+
+        // Webcam elements
+        const webcamPreview = document.getElementById('webcamPreview');
+        const startCamera = document.getElementById('startCamera');
+        const capturePhoto = document.getElementById('capturePhoto');
+        const retakePhoto = document.getElementById('retakePhoto');
+        const profilePhoto = document.getElementById('profilePhoto');
+
+        // Form elements
+        const rankSelect = document.getElementById('rank');
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', initApp);
+        loginForm.addEventListener('submit', loginUser);
+        logoutBtn.addEventListener('click', logoutUser);
+        exportBtn.addEventListener('click', exportToCSV);
+        addDataBtn.addEventListener('click', showTitleDialog);
+        searchBtn.addEventListener('click', showSearch);
+        profileForm.addEventListener('submit', saveProfile);
+        searchSubmit.addEventListener('click', searchProfiles);
+        dateSearch.addEventListener('click', searchByDate);
+        cancelBtn.addEventListener('click', hideForm);
+        cancelFormBtn.addEventListener('click', hideForm);
+        feesPercentage.addEventListener('input', updateProgressBar);
+
+        // Title Dialog event listeners
+        newCDCBtn.addEventListener('click', () => selectTitle('NEW CDC'));
+        revalidationBtn.addEventListener('click', () => selectTitle('REVALIDATION'));
+        crewTypeBtn.addEventListener('click', () => selectRevalidationType('CREW'));
+        officerTypeBtn.addEventListener('click', () => selectRevalidationType('OFFICER'));
+        confirmTitle.addEventListener('click', confirmTitleSelection);
+        cancelTitle.addEventListener('click', hideTitleDialog);
+
+        // Webcam event listeners
+        startCamera.addEventListener('click', startWebcam);
+        capturePhoto.addEventListener('click', captureWebcam);
+        retakePhoto.addEventListener('click', retakeWebcam);
+
+        // Initialize application
+        async function initApp() {
+            updateSyncStatus('Initializing Firebase...', 'syncing');
+            
+            // Check authentication state
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    userEmail.textContent = user.email;
+                    userInfo.style.display = 'flex';
+                    loginContainer.style.display = 'none';
+                    mainContent.style.display = 'block';
+                    updateSyncStatus('System Online', 'connected');
+                    loadDataFromFirebase();
+                } else {
+                    userInfo.style.display = 'none';
+                    loginContainer.style.display = 'block';
+                    mainContent.style.display = 'none';
+                    updateSyncStatus('Authentication Required', 'error');
+                }
+            });
+        }
+
+        // Login user
+        async function loginUser(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            showLoading('Authenticating...');
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                hideLoading();
+            } catch (error) {
+                console.error('Login error:', error);
+                hideLoading();
+                alert('Login failed: ' + error.message);
+            }
+        }
+
+        // Logout user
+        async function logoutUser() {
+            showLoading('Terminating session...');
+            try {
+                await auth.signOut();
+                hideLoading();
+            } catch (error) {
+                console.error('Logout error:', error);
+                hideLoading();
+            }
+        }
+
+        // Update sync status
+        function updateSyncStatus(message, status = 'connected') {
+            syncStatus.textContent = message;
+            syncIndicator.className = 'sync-indicator ' + status;
+        }
+
+        // Load data from Firebase
+        async function loadDataFromFirebase() {
+            showLoading('Fetching records...');
+            try {
+                const snapshot = await db.collection('profiles').orderBy('timestamp', 'desc').get();
+                profiles = [];
+                
+                snapshot.forEach(doc => {
+                    const profile = doc.data();
+                    profile.id = doc.id;
+                    profiles.push(profile);
+                });
+                
+                updateSyncStatus(`Online - ${profiles.length} Records`, 'connected');
+                displayProfiles(profiles);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Fallback if index not created yet
+                try {
+                    const snapshot = await db.collection('profiles').get();
+                    profiles = [];
+                    snapshot.forEach(doc => {
+                        const profile = doc.data();
+                        profile.id = doc.id;
+                        profiles.push(profile);
+                    });
+                    displayProfiles(profiles);
+                } catch(e) {
+                    updateSyncStatus('Connection Error', 'error');
+                }
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Save profile to Firebase
+        async function saveProfile(e) {
+            e.preventDefault();
+            
+            // Get certificates based on type
+            let selectedCertificates = [];
+            
+            if (selectedTitle === 'NEW CDC') {
+                document.querySelectorAll('input[name="certificates"]:checked').forEach(checkbox => {
+                    selectedCertificates.push(checkbox.value);
+                });
+            } else if (selectedTitle === 'REVALIDATION') {
+                if (selectedRevalidationType === 'CREW') {
+                    document.querySelectorAll('input[name="crewCertificates"]:checked').forEach(checkbox => {
+                        selectedCertificates.push(checkbox.value);
+                    });
+                } else if (selectedRevalidationType === 'OFFICER') {
+                    document.querySelectorAll('input[name="officerCertificates"]:checked').forEach(checkbox => {
+                        selectedCertificates.push(checkbox.value);
+                    });
+                }
+            }
+
+            const profile = {
+                name: document.getElementById('name').value,
+                rank: document.getElementById('rank').value,
+                cdcNumber: document.getElementById('cdcNumber').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                passportNumber: document.getElementById('passportNumber').value,
+                passportExpiry: document.getElementById('passportExpiry').value,
+                remark: document.getElementById('remark').value,
+                title: selectedTitle,
+                revalidationType: selectedRevalidationType,
+                profilePhoto: capturedPhoto,
+                certificates: selectedCertificates.join(', '),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // Add NEW CDC specific fields
+            if (selectedTitle === 'NEW CDC') {
+                profile.nrc = document.getElementById('nrc').value;
+                profile.fatherName = document.getElementById('fatherName').value;
+                profile.motherName = document.getElementById('motherName').value;
+                profile.birthdate = document.getElementById('birthdate').value;
+                profile.distinguishingMark = document.getElementById('distinguishingMark').value;
+                profile.fees = document.getElementById('fees').value;
+                profile.feesPercentage = document.getElementById('feesPercentage').value;
+                profile.pssrName = document.getElementById('pssrName').value;
+            }
+
+            showLoading('Uploading to cloud...');
+            try {
+                await db.collection('profiles').add(profile);
+                alert('Success: Profile archived in database.');
+                hideForm();
+                await loadDataFromFirebase();
+            } catch (error) {
+                console.error('Error saving data:', error);
+                alert('Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Export to CSV
+        async function exportToCSV() {
+            if (profiles.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            showLoading('Generating CSV...');
+            
+            try {
+                let csvContent = "Name,Rank,CDC Number,Phone,Address,Passport Number,Passport Expiry,Title,Revalidation Type,Remark,Certificates";
+                
+                // Add NEW CDC specific columns
+                if (profiles.some(p => p.title === 'NEW CDC')) {
+                    csvContent += ",NRC,Father's Name,Mother's Name,Birthdate,Distinguishing Mark,Fees,Fees Percentage,PSSR Name";
+                }
+                
+                csvContent += "\n";
+                
+                profiles.forEach(profile => {
+                    const row = [
+                        `"${profile.name}"`,
+                        `"${profile.rank}"`,
+                        `"${profile.cdcNumber}"`,
+                        `"${profile.phone}"`,
+                        `"${profile.address}"`,
+                        `"${profile.passportNumber || ''}"`,
+                        `"${profile.passportExpiry || ''}"`,
+                        `"${profile.title || ''}"`,
+                        `"${profile.revalidationType || ''}"`,
+                        `"${profile.remark || ''}"`,
+                        `"${profile.certificates || ''}"`
+                    ];
+                    
+                    // Add NEW CDC specific data
+                    if (profile.title === 'NEW CDC') {
+                        row.push(
+                            `"${profile.nrc || ''}"`,
+                            `"${profile.fatherName || ''}"`,
+                            `"${profile.motherName || ''}"`,
+                            `"${profile.birthdate || ''}"`,
+                            `"${profile.distinguishingMark || ''}"`,
+                            `"${profile.fees || ''}"`,
+                            `"${profile.feesPercentage || ''}"`,
+                            `"${profile.pssrName || ''}"`
+                        );
+                    }
+                    
+                    csvContent += row.join(',') + '\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'seaman_profiles_export.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                updateSyncStatus('Export Complete', 'connected');
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Export failed: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // UI functions
+        function showLoading(text = 'Processing...') {
+            loadingText.textContent = text;
+            loading.style.display = 'block';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showTitleDialog() {
+            titleDialog.style.display = 'block';
+            searchContainer.style.display = 'none';
+            formContainer.style.display = 'none';
+            resetTitleOptions();
+            titleDialog.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideTitleDialog() {
+            titleDialog.style.display = 'none';
+        }
+
+        // Function to select title
+        function selectTitle(title) {
+            selectedTitle = title;
+            
+            // Remove active class from both buttons
+            newCDCBtn.classList.remove('active');
+            revalidationBtn.classList.remove('active');
+            
+            if (title === 'NEW CDC') {
+                newCDCBtn.classList.add('active');
+                // Hide revalidation type selection
+                revalidationTypeSelection.style.display = 'none';
+                selectedRevalidationType = '';
+            } else if (title === 'REVALIDATION') {
+                revalidationBtn.classList.add('active');
+                // Show revalidation type selection
+                revalidationTypeSelection.style.display = 'block';
+            }
+        }
+
+        // Function to select revalidation type
+        function selectRevalidationType(type) {
+            selectedRevalidationType = type;
+            
+            // Remove active class from both buttons
+            crewTypeBtn.classList.remove('active');
+            officerTypeBtn.classList.remove('active');
+            
+            if (type === 'CREW') {
+                crewTypeBtn.classList.add('active');
+            } else if (type === 'OFFICER') {
+                officerTypeBtn.classList.add('active');
+            }
+        }
+
+        // Function to confirm title selection
+        function confirmTitleSelection() {
+            if (!selectedTitle) {
+                alert('Please select a document type');
+                return;
+            }
+            
+            if (selectedTitle === 'REVALIDATION' && !selectedRevalidationType) {
+                alert('Please select a revalidation type (CREW or OFFICER)');
+                return;
+            }
+            
+            hideTitleDialog();
+            showForm();
+        }
+
+        // Function to reset title options
+        function resetTitleOptions() {
+            selectedTitle = '';
+            selectedRevalidationType = '';
+            newCDCBtn.classList.remove('active');
+            revalidationBtn.classList.remove('active');
+            revalidationTypeSelection.style.display = 'none';
+            crewTypeBtn.classList.remove('active');
+            officerTypeBtn.classList.remove('active');
+            
+            // Uncheck all checkboxes
+            document.querySelectorAll('input[name="crewCertificates"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="officerCertificates"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="certificates"]').forEach(cb => cb.checked = false);
+        }
+
+        function showForm() {
+            formContainer.style.display = 'block';
+            searchContainer.style.display = 'none';
+            profileForm.reset();
+            updateProgressBar();
+            
+            // Update form title based on selection
+            if (selectedTitle === 'NEW CDC') {
+                formTitle.innerHTML = '<i class="fa-solid fa-user-pen"></i> New CDC Registration';
+            } else if (selectedTitle === 'REVALIDATION') {
+                formTitle.innerHTML = `<i class="fa-solid fa-user-pen"></i> ${selectedRevalidationType} Revalidation Registration`;
+            }
+            
+            // Reset webcam
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            webcamPreview.innerHTML = '<i class="fa-solid fa-camera" style="font-size: 50px; opacity: 0.5;"></i>';
+            capturedPhoto = null;
+            capturePhoto.disabled = true;
+            retakePhoto.disabled = true;
+            
+            // Update form based on selection
+            updateFormFields();
+            
+            formContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateFormFields() {
+            // Show/hide fields based on selection
+            const newCDCOnlyFields = document.querySelectorAll('.new-cdc-only');
+            
+            if (selectedTitle === 'NEW CDC') {
+                // Show NEW CDC specific fields
+                newCDCOnlyFields.forEach(field => {
+                    field.classList.remove('hidden-field');
+                });
+                
+                // Hide revalidation docs section
+                revalidationDocsSection.style.display = 'none';
+                
+                // Set rank options for NEW CDC
+                rankSelect.innerHTML = `
+                    <option value="">Select Rank</option>
+                    <option value="D/R">D/R</option>
+                    <option value="E/R">E/R</option>
+                    <option value="ET/R">ET/R</option>
+                    <option value="G/S">G/S</option>
+                    <option value="C/CK">C/CK</option>
+                `;
+            } else if (selectedTitle === 'REVALIDATION') {
+                // Hide NEW CDC specific fields
+                newCDCOnlyFields.forEach(field => {
+                    field.classList.add('hidden-field');
+                });
+                
+                // Show revalidation docs section
+                revalidationDocsSection.style.display = 'block';
+                
+                // Show/hide the correct documents
+                if (selectedRevalidationType === 'CREW') {
+                    crewDocs.classList.remove('hidden-field');
+                    officerDocs.classList.add('hidden-field');
+                } else if (selectedRevalidationType === 'OFFICER') {
+                    crewDocs.classList.add('hidden-field');
+                    officerDocs.classList.remove('hidden-field');
+                }
+                
+                // Set rank options based on revalidation type
+                if (selectedRevalidationType === 'OFFICER') {
+                    rankSelect.innerHTML = `
+                        <option value="">Select Officer Rank</option>
+                        <option value="Caption">Caption</option>
+                        <option value="C/10">C/10</option>
+                        <option value="2/0">2/0</option>
+                        <option value="3/0">3/0</option>
+                        <option value="C/E">C/E</option>
+                        <option value="2/E">2/E</option>
+                        <option value="3/E">3/E</option>
+                        <option value="4/E">4/E</option>
+                        <option value="E/E">E/E</option>
+                    `;
+                } else if (selectedRevalidationType === 'CREW') {
+                    rankSelect.innerHTML = `
+                        <option value="">Select Crew Rank</option>
+                        <option value="BSN">BSN</option>
+                        <option value="A/B">A/B</option>
+                        <option value="O/S">O/S</option>
+                        <option value="FTR">FTR</option>
+                        <option value="OLR">OLR</option>
+                        <option value="WPR">WPR</option>
+                        <option value="D/C">D/C</option>
+                        <option value="E/C">E/C</option>
+                        <option value="Cruise Crew">Cruise Crew</option>
+                    `;
+                }
+            }
+        }
+
+        function hideForm() {
+            formContainer.style.display = 'none';
+            resetTitleOptions();
+        }
+
+        function showSearch() {
+            searchContainer.style.display = 'block';
+            formContainer.style.display = 'none';
+            titleDialog.style.display = 'none';
+            searchContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateProgressBar() {
+            const percentage = feesPercentage.value || 0;
+            feesProgress.style.width = `${percentage}%`;
+            
+            // Dynamic color for progress
+            if(percentage < 30) feesProgress.style.background = '#f43f5e'; // Red
+            else if(percentage < 70) feesProgress.style.background = '#fbbf24'; // Orange
+            else feesProgress.style.background = '#2dd4bf'; // Teal
+        }
+
+        function searchProfiles() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredProfiles = profiles.filter(profile => 
+                (profile.name && profile.name.toLowerCase().includes(searchTerm)) ||
+                (profile.rank && profile.rank.toLowerCase().includes(searchTerm)) ||
+                (profile.cdcNumber && profile.cdcNumber.toLowerCase().includes(searchTerm))
+            );
+            
+            displayProfiles(filteredProfiles);
+        }
+
+        function searchByDate() {
+            const fromDate = dateFrom.value;
+            const toDate = dateTo.value;
+            
+            if (!fromDate && !toDate) {
+                alert('Please enter at least one date');
+                return;
+            }
+            
+            const filteredProfiles = profiles.filter(profile => {
+                if (!profile.timestamp) return false;
+                
+                const profileDate = new Date(profile.timestamp.seconds * 1000);
+                const from = fromDate ? new Date(fromDate) : new Date(0);
+                const to = toDate ? new Date(toDate) : new Date();
+                
+                // Set time to beginning of day for from date and end of day for to date
+                from.setHours(0, 0, 0, 0);
+                to.setHours(23, 59, 59, 999);
+                
+                return profileDate >= from && profileDate <= to;
+            });
+            
+            displayProfiles(filteredProfiles);
+        }
+
+        function displayProfiles(profilesToShow) {
+            profileCards.innerHTML = '';
+            
+            if (profilesToShow.length === 0) {
+                noResults.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="font-size: 40px; margin-bottom: 20px; opacity: 0.5;"></i><br>No matching profiles found.';
+                noResults.style.display = 'block';
+                profileCards.appendChild(noResults);
+                return;
+            }
+            
+            noResults.style.display = 'none';
+            
+            profilesToShow.forEach(profile => {
+                const card = document.createElement('div');
+                card.className = 'profile-card';
+                
+                // Get initials
+                const initials = profile.name ? profile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-avatar">${initials}</div>
+                        <div>
+                            <h3>${profile.name}</h3>
+                            <p>${profile.rank}</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-details">
+                            <div class="card-detail">
+                                <span class="detail-label"><i class="fa-regular fa-id-card"></i> CDC</span>
+                                <span class="detail-value">${profile.cdcNumber}</span>
+                            </div>
+                            <div class="card-detail">
+                                <span class="detail-label"><i class="fa-solid fa-phone"></i> Phone</span>
+                                <span class="detail-value">${profile.phone}</span>
+                            </div>
+                            <div class="card-detail">
+                                <span class="detail-label"><i class="fa-solid fa-file"></i> Type</span>
+                                <span class="detail-value">${profile.title || 'N/A'}</span>
+                            </div>
+                            ${profile.certificates ? `
+                            <div class="card-detail">
+                                <span class="detail-label"><i class="fa-solid fa-certificate"></i> Documents</span>
+                                <span class="detail-value" style="font-size: 12px;">${profile.certificates}</span>
+                            </div>
+                            ` : ''}
+                            ${profile.title === 'NEW CDC' ? `
+                            <div class="card-detail">
+                                <span class="detail-label"><i class="fa-solid fa-wallet"></i> Fees</span>
+                                <span class="detail-value">$${profile.fees || '0'}</span>
+                            </div>
+                            <div class="card-detail" style="border:none; margin-top: 10px;">
+                                <span class="detail-label">Payment Completion</span>
+                                <span class="detail-value">${profile.feesPercentage || '0'}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: ${profile.feesPercentage || '0'}%; background: ${(profile.feesPercentage || 0) < 100 ? ((profile.feesPercentage || 0) < 50 ? '#f43f5e' : '#fbbf24') : '#2dd4bf'}"></div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    const titleText = profile.title ? `\n\n📋 Document Type: ${profile.title}` : '';
+                    const revalidationText = profile.revalidationType ? `\nRevalidation Type: ${profile.revalidationType}` : '';
+                    const certText = profile.certificates ? `\n\n📜 Certificates:\n${profile.certificates}` : '';
+                    const pssrText = profile.pssrName ? `\n\n📄 PSSR:\nName: ${profile.pssrName}` : '';
+                    const passportText = profile.passportNumber ? `\n\n📑 Passport:\nNumber: ${profile.passportNumber}\nExpiry: ${profile.passportExpiry || 'N/A'}` : '';
+                    const remarkText = profile.remark ? `\n\n💬 Remark:\n${profile.remark}` : '';
+                    
+                    // NEW CDC specific details
+                    const newCDCText = profile.title === 'NEW CDC' ? 
+                        `\n\n📝 NEW CDC Details:\nNRC: ${profile.nrc || 'N/A'}\nFather: ${profile.fatherName || 'N/A'}\nMother: ${profile.motherName || 'N/A'}\nBirthdate: ${profile.birthdate || 'N/A'}\nMark: ${profile.distinguishingMark || 'N/A'}\nFees: $${profile.fees || '0'}\nPaid: ${profile.feesPercentage || '0'}%` : '';
+                    
+                    alert(`SEAMAN PROFILE\n------------------\nName: ${profile.name}\nRank: ${profile.rank}\nCDC: ${profile.cdcNumber}\nPhone: ${profile.phone}\nAddress: ${profile.address}${titleText}${revalidationText}${newCDCText}${certText}${pssrText}${passportText}${remarkText}`);
+                });
+                
+                profileCards.appendChild(card);
+            });
+        }
+
+        // Webcam functions
+        async function startWebcam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.autoplay = true;
+                video.playsInline = true;
+                
+                webcamPreview.innerHTML = '';
+                webcamPreview.appendChild(video);
+                
+                capturePhoto.disabled = false;
+                startCamera.disabled = true;
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+                alert('Unable to access webcam. Please check permissions.');
+            }
+        }
+
+        function captureWebcam() {
+            if (!stream) return;
+            
+            const video = webcamPreview.querySelector('video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            capturedPhoto = canvas.toDataURL('image/jpeg');
+            profilePhoto.value = capturedPhoto;
+            
+            // Stop the stream
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            
+            // Replace video with captured image
+            const img = document.createElement('img');
+            img.src = capturedPhoto;
+            webcamPreview.innerHTML = '';
+            webcamPreview.appendChild(img);
+            
+            capturePhoto.disabled = true;
+            retakePhoto.disabled = false;
+        }
+
+        function retakeWebcam() {
+            capturedPhoto = null;
+            profilePhoto.value = '';
+            webcamPreview.innerHTML = '<i class="fa-solid fa-camera" style="font-size: 50px; opacity: 0.5;"></i>';
+            capturePhoto.disabled = true;
+            retakePhoto.disabled = true;
+            startCamera.disabled = false;
+        }
+    </script>
+</body>
+</html>
