@@ -843,7 +843,7 @@
               <input type="text" id="passportExpiry" placeholder="DD/MM/YYYY"/>
             </div>
 
-            <!-- NEW CDC Only (PSSR Name removed) -->
+            <!-- NEW CDC Only -->
             <div class="form-group hidden-field new-cdc-only">
               <label for="nrc">NRC Number</label>
               <input type="text" id="nrc" placeholder="e.g., 12/ABC(N)123456"/>
@@ -859,6 +859,11 @@
             <div class="form-group hidden-field new-cdc-only">
               <label for="birthdate">Birthdate (DD/MM/YYYY)</label>
               <input type="text" id="birthdate" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}"/>
+            </div>
+            <!-- Place of Birth Field Added Here -->
+            <div class="form-group hidden-field new-cdc-only">
+              <label for="placeOfBirth">Place of Birth</label>
+              <input type="text" id="placeOfBirth" placeholder="e.g., Yangon, Myanmar"/>
             </div>
             <div class="form-group hidden-field new-cdc-only">
               <label for="distinguishingMark">Distinguishing Mark</label>
@@ -968,7 +973,7 @@
     let selectedRevalidationType='';
     let stream=null;
     let capturedPhoto=null;
-    let editingProfileId = null; // Track which profile is being edited
+    let editingProfileId = null;
 
     const loading=document.getElementById('loading');
     const loadingText=document.getElementById('loadingText');
@@ -1139,10 +1144,10 @@
         profile.fatherName=document.getElementById('fatherName').value;
         profile.motherName=document.getElementById('motherName').value;
         profile.birthdate=document.getElementById('birthdate').value;
+        profile.placeOfBirth=document.getElementById('placeOfBirth').value; // Added Place of Birth
         profile.distinguishingMark=document.getElementById('distinguishingMark').value;
         profile.fees=document.getElementById('fees').value;
         profile.feesPercentage=document.getElementById('feesPercentage').value;
-        // PSSR Name removed as requested
       }
 
       showLoading('Uploading to cloud...');
@@ -1191,10 +1196,10 @@
         profile.fatherName=document.getElementById('fatherName').value;
         profile.motherName=document.getElementById('motherName').value;
         profile.birthdate=document.getElementById('birthdate').value;
+        profile.placeOfBirth=document.getElementById('placeOfBirth').value; // Added Place of Birth
         profile.distinguishingMark=document.getElementById('distinguishingMark').value;
         profile.fees=document.getElementById('fees').value;
         profile.feesPercentage=document.getElementById('feesPercentage').value;
-        // PSSR Name removed as requested
       }
 
       showLoading('Updating profile...');
@@ -1217,7 +1222,6 @@
       showLoading('Deleting profile...');
       try {
         await db.collection('profiles').doc(profileId).delete();
-        // Remove from local array
         profiles = profiles.filter(p => p.id !== profileId);
         displayProfiles(profiles);
         updateSyncStatus(`Online - ${profiles.length} Records`, 'connected');
@@ -1234,7 +1238,6 @@
       selectedTitle = profile.title || '';
       selectedRevalidationType = profile.revalidationType || '';
       
-      // Populate form fields
       document.getElementById('name').value = profile.name || '';
       document.getElementById('rank').value = profile.rank || '';
       document.getElementById('cdcNumber').value = profile.cdcNumber || '';
@@ -1244,25 +1247,23 @@
       document.getElementById('passportExpiry').value = profile.passportExpiry || '';
       document.getElementById('remark').value = profile.remark || '';
       
-      // Set profile photo if exists
       if (profile.profilePhoto) {
         capturedPhoto = profile.profilePhoto;
         profilePhoto.value = profile.profilePhoto;
         webcamPreview.innerHTML = `<img src="${profile.profilePhoto}" alt="Profile Photo">`;
       }
       
-      // Handle NEW CDC specific fields
       if (profile.title === 'NEW CDC') {
         document.getElementById('nrc').value = profile.nrc || '';
         document.getElementById('fatherName').value = profile.fatherName || '';
         document.getElementById('motherName').value = profile.motherName || '';
         document.getElementById('birthdate').value = profile.birthdate || '';
+        document.getElementById('placeOfBirth').value = profile.placeOfBirth || ''; // Added Place of Birth
         document.getElementById('distinguishingMark').value = profile.distinguishingMark || '';
         document.getElementById('fees').value = profile.fees || '';
         document.getElementById('feesPercentage').value = profile.feesPercentage || '';
         updateProgressBar();
         
-        // Check certificates checkboxes
         if (profile.certificates) {
           const certs = profile.certificates.split(', ');
           document.querySelectorAll('input[name="certificates"]').forEach(cb => {
@@ -1271,15 +1272,12 @@
         }
       }
       
-      // Handle REVALIDATION
       if (profile.title === 'REVALIDATION') {
-        // Check certificates checkboxes
         if (profile.certificates) {
           const certs = profile.certificates.split(', ');
           const certsContainer = selectedRevalidationType === 'CREW' ? 
             'crewCertificates' : 'officerCertificates';
           
-          // We need to render the revalidation docs first
           renderRevalidationDocsIntoForm();
           revalidationDocsContainer.querySelectorAll(`input[name="${certsContainer}"]`).forEach(cb => {
             cb.checked = certs.includes(cb.value);
@@ -1287,7 +1285,6 @@
         }
       }
       
-      // Update form UI
       formTitleText.textContent = 'Edit Profile';
       saveBtn.classList.add('hidden-field');
       updateBtn.classList.remove('hidden-field');
@@ -1302,8 +1299,7 @@
       try{
         let csv="Name,Rank,CDC Number,Phone,Address,Passport Number,Passport Expiry,Title,Revalidation Type,Remark,Certificates";
         if(profiles.some(p=>p.title==='NEW CDC')){
-          csv+=",NRC,Father's Name,Mother's Name,Birthdate,Distinguishing Mark,Fees,Fees Percentage";
-          // PSSR Name removed
+          csv+=",NRC,Father's Name,Mother's Name,Birthdate,Place of Birth,Distinguishing Mark,Fees,Fees Percentage";
         }
         csv+="\n";
         profiles.forEach(p=>{
@@ -1315,8 +1311,7 @@
           if(p.title==='NEW CDC'){
             row.push(
               `"${p.nrc||''}"`,`"${p.fatherName||''}"`,`"${p.motherName||''}"`,`"${p.birthdate||''}"`,
-              `"${p.distinguishingMark||''}"`,`"${p.fees||''}"`,`"${p.feesPercentage||''}"`
-              // PSSR Name removed
+              `"${p.placeOfBirth||''}"`,`"${p.distinguishingMark||''}"`,`"${p.fees||''}"`,`"${p.feesPercentage||''}"`
             );
           }
           csv+=row.join(',')+"\n";
@@ -1343,7 +1338,6 @@
 
     function hideTitleDialog(){
       titleDialog.style.display='none';
-      // Also clear any docs rendered inside form
       revalidationDocsContainer.innerHTML='';
       revalidationDocsContainer.classList.add('hidden-field');
     }
@@ -1389,9 +1383,7 @@
       if(!source) return;
 
       const clone=source.cloneNode(true);
-      // remove id to avoid duplicates; keep input names
       clone.removeAttribute('id');
-      // ensure inputs are enabled and unchecked
       clone.querySelectorAll('input[type="checkbox"]').forEach(cb=>{cb.checked=false;cb.disabled=false;});
       clone.classList.remove('hidden-field');
       clone.style.display='block';
@@ -1403,10 +1395,8 @@
     function resetTitleOptions(){
       selectedTitle='';selectedRevalidationType='';
       [newCDCOption,revalidationOption,crewOption,officerOption,revalidationSubOptions].forEach(el=>el.classList.remove('active'));
-      // Clear dialog templates (stay hidden)
       revalidationDocsContainer.innerHTML='';
       revalidationDocsContainer.classList.add('hidden-field');
-      // Uncheck all possible certs
       document.querySelectorAll('input[name="crewCertificates"],input[name="officerCertificates"]').forEach(cb=>cb.checked=false);
     }
 
@@ -1417,7 +1407,6 @@
       updateProgressBar();
       editingProfileId = null;
 
-      // Reset form UI
       formTitleText.textContent = 'New Profile Registration';
       saveBtn.classList.remove('hidden-field');
       updateBtn.classList.add('hidden-field');
@@ -1442,7 +1431,6 @@
           <option value="G/S">G/S</option>
           <option value="C/CK">C/CK</option>
         `;
-        // hide revalidation docs container if previously shown
         revalidationDocsContainer.classList.add('hidden-field');
         revalidationDocsContainer.innerHTML='';
       }else if(selectedTitle==='REVALIDATION'){
@@ -1474,7 +1462,6 @@
             <option value="Cruise Crew">Cruise Crew</option>
           `;
         }
-        // revalidationDocsContainer will be populated by renderRevalidationDocsIntoForm()
       }
     }
 
@@ -1561,20 +1548,17 @@
           </div>
         `;
         
-        // Add click event for edit button
         card.querySelector('.btn-edit').addEventListener('click', (e) => {
           e.stopPropagation();
           const profile = profiles.find(prof => prof.id === p.id);
           if (profile) editProfile(profile);
         });
         
-        // Add click event for delete button
         card.querySelector('.btn-delete').addEventListener('click', (e) => {
           e.stopPropagation();
           deleteProfile(p.id);
         });
         
-        // Original click event for viewing profile details
         card.addEventListener('click',()=>{
           const titleText=p.title?`\n\n📋 Document Type: ${p.title}`:'';
           const revText=p.revalidationType?`\nRevalidation Type: ${p.revalidationType}`:'';
@@ -1582,7 +1566,7 @@
           const passportText=p.passportNumber?`\n\n📑 Passport:\nNumber: ${p.passportNumber}\nExpiry: ${p.passportExpiry||'N/A'}`:'';
           const remarkText=p.remark?`\n\n💬 Remark:\n${p.remark}`:'';
           const newCDCText=p.title==='NEW CDC'
-            ?`\n\n📝 NEW CDC Details:\nNRC: ${p.nrc||'N/A'}\nFather: ${p.fatherName||'N/A'}\nMother: ${p.motherName||'N/A'}\nBirthdate: ${p.birthdate||'N/A'}\nMark: ${p.distinguishingMark||'N/A'}\nFees: $${p.fees||'0'}\nPaid: ${p.feesPercentage||'0'}%`
+            ?`\n\n📝 NEW CDC Details:\nNRC: ${p.nrc||'N/A'}\nFather: ${p.fatherName||'N/A'}\nMother: ${p.motherName||'N/A'}\nBirthdate: ${p.birthdate||'N/A'}\nPlace of Birth: ${p.placeOfBirth||'N/A'}\nMark: ${p.distinguishingMark||'N/A'}\nFees: $${p.fees||'0'}\nPaid: ${p.feesPercentage||'0'}%`
             :'';
           alert(`SEAMAN PROFILE\n------------------\nName: ${p.name}\nRank: ${p.rank}\nCDC: ${p.cdcNumber}\nPhone: ${p.phone}\nAddress: ${p.address}${titleText}${revText}${newCDCText}${certText}${passportText}${remarkText}`);
         });
